@@ -18,15 +18,14 @@ var newsId = urlParams.get('id');
 document.addEventListener('DOMContentLoaded', async function () {
 
     const news = await fetchOneNews(newsId);
-    console.log(news);
+    console.log({news});
 
             // Replace demo values with actual data
             const heading = document.getElementById('heading');
             const subHeading = document.getElementById('subHeading');
             const detailNews = document.getElementById('detailNews');
-
-            
-            const publicationDateAndAuthor = document.getElementById('publicationDateAndAuthor'); 
+            //const imageUrl = document.getElementById('imageUrl');
+            const publishedDateAndAuthor = document.getElementById('publishedDateAndAuthor'); 
             const videoUrl = document.getElementById('videoUrl');
             const isHot = document.getElementById('isHot');
             
@@ -34,11 +33,17 @@ document.addEventListener('DOMContentLoaded', async function () {
             heading.innerHTML = news.heading;
             subHeading.innerText = news.subHeading;
             detailNews.innerText = news.detailNews;
-            publicationDateAndAuthor.innerHTML = 'Published by: ' + news.author;
-            isHot.style.display = "block";// Change to "block" if the news is hot
+            publishedDateAndAuthor.innerHTML = 'Published by: ' + news.author;
+             if(news.isH){
+              isHot.style.display = "block";
+             }else{
+              isHot.style.display = "none";// Change to "block" if the news is hot
+             }
+             console.log('Display news is Hot or not :', isHot);
             videoUrl.src = news.videoUrl;
     
-
+             const img = document.getElementById('imageId');
+            img.src = news.imageUrl;
 
 
 });
@@ -61,6 +66,9 @@ export async function fetchOneNews(newsId){
         })
         .catch((error) => console.error("Error in creating News:", error));
 
+
+        console.log('News is returning');
+        console.log({oneNews});
         return oneNews;
 }
 

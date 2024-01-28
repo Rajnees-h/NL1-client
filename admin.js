@@ -1,24 +1,68 @@
 
-import { FetchAllNews } from './index.js';
-import { serverUrl } from './index.js';
+import { FetchAllNews, fetchNewsByContion,serverUrl } from './index.js';
 import {fetchOneNews} from './readNews.js'
+import { createArticleComponent } from './js/jsComponent.js'
+
+console.log('Inside Admin.js File')
 
 
 // Server Url
 //const serverUrl = 'https://my-news-letter-h5vk.onrender.com/';
 
-renderAllNews();
+
 console.log('Add news started');
-const addNewsButton = document.getElementById('addNews');
+const addNewsButton = document.getElementById('addNewsButton');
+const allNewsButton = document.getElementById('allNewsButton');
+const todaysNewsButton = document.getElementById('todaysNewsButton');
+const hotNewsButton = document.getElementById('hotNewsButton');
 const cancelModalButton = document.getElementById('cancelModal');
 const closeModalCrossButton = document.getElementById('closeModalCrossButton');
-const submitModalButton = document.getElementById('submitNewsDetail')
-console.log(addNewsButton);
+const submitModalButton = document.getElementById('submitNewsDetail');
+const searchNews = document.getElementById('searchNews');
+const searchNewsButton = document.getElementById('searchNewsButton');
+const selectedOptionName = document.getElementById('selectedOptionName');
+const home = document.getElementById('home');
+const imagePreview = document.getElementById('imagePreview');
+const imageUrl = document.getElementById('imageUrl');
 
+imageUrl.onchange = imageUpdated;
+
+
+function imageUpdated(event) {
+  
+console.log({imageUrl})
+
+  const fileInput = event.target;
+  const previewImage = document.getElementById('previewImage');
+
+  if (fileInput.files && fileInput.files[0]) {
+    const reader = new FileReader();
+
+    reader.onload = function (e) {
+      previewImage.src = e.target.result;
+    };
+
+    reader.readAsDataURL(fileInput.files[0]);
+  }
+};
 
 addNewsButton.onclick = function(event){
+  console.log('Add news button clicked')
     console.log('Add button on click', event.target.name, event.target.value);
     openModal(event);
+}
+allNewsButton.onclick = function(){
+  selectedOptionName.innerText = 'All Publised News';
+  renderAllNews();
+}
+
+todaysNewsButton.onclick = function(){
+  selectedOptionName.innerText = "Today's News";
+  renderTodaysNews();
+}
+hotNewsButton.onclick = function(){
+  selectedOptionName.innerText = "Hot News";
+  renderHotNews();
 }
 cancelModalButton.onclick = function(){
     closeModal();
@@ -27,15 +71,28 @@ closeModalCrossButton.onclick = function(){
     closeModal();
 }
 
+searchNewsButton.onclick = function(){
+  console.log(searchNews.value)
+  renderAllNewsByKeyword(searchNews.value);
+}
+
+searchNews.onkeyup = function(event){
+  console.log('Searching value : ' + event.target.value);
+  renderAllNewsByKeyword(event.target.value);
+}
+
+home.onclick = function(){
+  window.location.reload();
+}
+
+
+
 submitModalButton.onclick = function(event){
     if(event.target.name == 'addNews'){
         storeNews();
-        showToast('Successfully Added', 2000);
-        renderAllNews();
+
     }else if(event.target.name == 'editNews'){
         updateNews();
-        showToast('Successfully Updated', 2000);
-        renderAllNews();
     }
     
 }
@@ -47,50 +104,58 @@ var modal = document.getElementById('myModal');
 
 async function openModal(event) {
 
-  var news = {
-    _id : undefined,
-    heading : '',
-    subHeading : '',
-    detailNews : '',
-    author : '',
-    publicationDate : undefined,
-    imageUrl : null,
-    videoUrl : '',
-    isHot : false,
-    isPublished : false
+    var news = {
+      _id : undefined,
+      heading : '',
+      subHeading : '',
+      detailNews : '',
+      author : '',
+      publishedDate : undefined,
+      imageUrl : null,
+      videoUrl : '',
+      isHot : false,
+      isPublished : false
 
-  }
-
-  var modalValues = {
-    modalHeading :'Add News Details',
-    modalSubmitButtonName : 'addNews',
-    modalSubmitButtonText : 'Submit'
-  }
-
-console.log('open modal clicked', event.target.name, event.target.value)
-
- if(event.target.name == 'editNews'){
-
-    // Update Modal Values here
-    modalValues.modalHeading = 'Update News Details';
-    modalValues.modalSubmitButtonName = 'editNews';
-    modalValues.modalSubmitButtonText = 'Update';
-
-    // populate the news fields with old data value make sure news id is aslo added in object
-      
-    try{
-      var fetchedNews = await fetchOneNews(event.target.value);
-    }catch(err){
-      console.log('Not able to fetch the news');
-      console.log('Error received : ', err);
     }
-   
-    console.log('News fetched from database : ')
-    console.log(fetchedNews);
 
-    news = fetchedNews;
+    // Temproary 
+    document.getElementById('previewImage').src = null;
 
-}
+    var modalValues = {
+      modalHeading :'Add News Details',
+      modalSubmitButtonName : 'addNews',
+      modalSubmitButtonText : 'Submit'
+    }
+
+    console.log('open modal clicked', event.target.name, event.target.value)
+
+    if(event.target.name == 'editNews'){
+
+        // Update Modal Values here
+        modalValues.modalHeading = 'Update News Details';
+        modalValues.modalSubmitButtonName = 'editNews';
+        modalValues.modalSubmitButtonText = 'Update';
+
+        // populate the news fields with old data value make sure news id is aslo added in object
+          
+        try{
+          var fetchedNews = await fetchOneNews(event.target.value);
+          console.log({fetchedNews});
+        }catch(err){
+          console.log('Not able to fetch the news');
+          console.log('Error received : ', err);
+        }
+      
+        console.log('News fetched from database : ')
+        console.log(fetchedNews);
+        console.log('Fetch News Date : ' + fetchedNews.publishedDate)
+
+        news = fetchedNews;
+      
+
+    }
+
+  console.log({news})
 
     // Update Modal Values as well, like modal name and buttons value
     document.getElementById('modalHeading').innerText = modalValues.modalHeading;
@@ -104,8 +169,40 @@ console.log('open modal clicked', event.target.name, event.target.value)
     document.getElementById('subHeading').value = news.subHeading;
     document.getElementById('detailNews').value = news.detailNews;
     document.getElementById('author').value = news.author;
-    document.getElementById('publicationDate').value = Date(news.publicationDate);
-    document.getElementById('imageUrl').value = "";//news.imageUrl;
+    document.getElementById('publishedDate').value = news.publishedDate;
+    if(news.publishedDate != undefined)
+    document.getElementById('publishedDate').value = news.publishedDate.slice(0, 10);
+    //document.getElementById('imageUrl').innerText = news.imageUrl;
+
+    
+
+
+    const imageString = news.imageUrl;
+
+    if(imageString != null && imageString != ''){
+      console.log(imageString);
+
+      // Create Blob from Base64-encoded string
+     var imageBlob = base64toBlob(imageString);
+     
+     // Create a File from the Blob (optional: you can provide a filename)
+     var imageFile = new File([imageBlob] , news._id , { type: imageBlob.type });
+     
+     // Now, you can use 'imageFile' as a regular File object
+     console.log(imageFile);
+     
+     
+         setFileInputValue(imageFile);
+     
+    }else{
+      removeFileInputValue();
+    }
+
+
+
+    if(news.imageUrl != null){
+      document.getElementById('previewImage').src = news.imageUrl;
+    }
     document.getElementById('videoUrl').value = news.videoUrl;
     document.getElementById('isHot').checked = news.isHot ;
     document.getElementById('isPublished').checked = news.isPublished;
@@ -141,8 +238,8 @@ function storeNews() {
      news.subHeading = document.getElementById('subHeading').value;
      news.detailNews = document.getElementById('detailNews').value;
      news.author = document.getElementById('author').value;
-     news.publicationDate = document.getElementById('publicationDate').value;
-     news.imageUrl = document.getElementById('imageUrl').value;
+     news.publishedDate = document.getElementById('publishedDate').value;
+     news.imageUrl = document.getElementById('imageUrl').files[0];
      news.videoUrl = document.getElementById('videoUrl').value;
      news.isHot = document.getElementById('isHot').checked;
      news.isPublished = document.getElementById('isPublished').checked;
@@ -150,8 +247,14 @@ function storeNews() {
      console.log('Store news added all data');
      console.log(news);
 
+     // Create News Using Form Data
+     const formData = new FormData(document.getElementById('newsForm')); 
+     formData.delete('isHot');
+    formData.append('isHot',document.getElementById('isHot').checked);
+    formData.delete('isPublished');
+    formData.append('isPublished',document.getElementById('isPublished').checked);
      try{
-        insertNewsInDatabase(news);
+        insertNewsInDatabase(formData);
      }catch{
         console.log('Failed to Insert data in database');
         alert('Failed to Insert');
@@ -160,6 +263,8 @@ function storeNews() {
  
 
   closeModal(); // Close the modal after submission
+  showToast('Successfully Added', 2000);
+  renderAllNews();
 }
 
 // Add your updateNews() function implementation here
@@ -168,35 +273,93 @@ async function updateNews() {
     console.log('Update news called');
     let news = {}
     
-     news._id = document.getElementById('newsId').value;
-     news.heading = document.getElementById('heading').value;
-     news.subHeading = document.getElementById('subHeading').value;
-     news.detailNews = document.getElementById('detailNews').value;
-     news.author = document.getElementById('author').value;
-     news.publicationDate = document.getElementById('publicationDate').value;
-     news.imageUrl = document.getElementById('imageUrl').value;
-     news.videoUrl = document.getElementById('videoUrl').value;
-     news.isHot = document.getElementById('isHot').checked;
-     news.isPublished = document.getElementById('isPublished').checked;
+    //  news._id = document.getElementById('newsId').value;
+    //  news.heading = document.getElementById('heading').value;
+    //  news.subHeading = document.getElementById('subHeading').value;
+    //  news.detailNews = document.getElementById('detailNews').value;
+    //  news.author = document.getElementById('author').value;
+    //  console.log('update Date : ' + document.getElementById('publishedDate').value)
+    //  news.publishedDate =  document.getElementById('publishedDate').value;
+    //  console.log('update Date : ' + news.publishedDate)
+    //  news.imageUrl = document.getElementById('imageUrl').value;
+    //  news.videoUrl = document.getElementById('videoUrl').value;
+    //  news.isHot = document.getElementById('isHot').checked;
+    //  news.isPublished = document.getElementById('isPublished').checked;
 
-     console.log('update news updated  all data');
-     console.log(news);
+    //  console.log('update news updated  all data');
+    //  console.log(news);
+
+
+     // Update News Using Form Data
+
+         // Create News Using Form Data
+        const formData = new FormData(document.getElementById('newsForm')); 
+        formData.delete('isHot');
+        formData.append('isHot',document.getElementById('isHot').checked);
+        formData.delete('isPublished');
+        formData.append('isPublished',document.getElementById('isPublished').checked);
+        formData.append('_id',document.getElementById('newsId').value);
+
+
 
      try{
-        console.log('Trying to update News data');
-       var updatedNews = await updateNewsInDatabase(news);
-       console.log('Successfully updated')
+      console.log('Trying to update News data');
+      console.log({formData})
+      await updateNewsInDatabase(formData);
+      console.log('Successfully updated')
      }catch{
         console.log('Failed to Update data in database');
         alert('Failed to Update');
      }
 
      console.log('Updated news :')
-     console.log(updatedNews)
+    
 
   closeModal(); // Close the modal after submission
+  showToast('Successfully Updated', 2000);
+  renderAllNews();
 }
 
+
+function setFileInputValue(file) {
+  // Create a DataTransfer object
+  var dataTransfer = new DataTransfer();
+
+  // Add the file to the DataTransfer object
+  dataTransfer.items.add(file);
+
+  // Create a new file input element
+  var input = document.createElement("input");
+  input.type = "file";
+  input.id = "imageUrl";
+  input.name = "imageUrl";
+  input.accept = "image/*";
+  input.files = dataTransfer.files;
+  input.addEventListener('change', imageUpdated);
+
+  // Replace the original file input with the new one
+  document.getElementById("imageUrl").parentNode.replaceChild(input, document.getElementById("imageUrl"));
+}
+
+function removeFileInputValue() {
+  // Create a DataTransfer object
+  var dataTransfer = new DataTransfer();
+
+  // Add the file to the DataTransfer object
+  //dataTransfer.items.add([]);
+
+  // Create a new file input element
+  var input = document.createElement("input");
+  input.type = "file";
+  input.id = "imageUrl";
+  input.name = "imageUrl";
+  input.accept = "image/*";
+  //input.files = dataTransfer.files;
+  input.addEventListener('change', imageUpdated);
+
+  // Replace the original file input with the new one
+  document.getElementById("imageUrl").parentNode.replaceChild(input, document.getElementById("imageUrl"));
+}
 
 
 
@@ -213,6 +376,44 @@ async function renderAllNews(){
     console.log(all_news);
 }
 
+async function renderAllNewsByKeyword(keyword){
+  const container = document.getElementById('render-all-news');
+  container.innerHTML = '';
+  const condition = `fetchAllByKeyword/${keyword}`;
+  var all_news = await fetchNewsByContion(condition);
+  all_news.forEach(news => {
+      container.appendChild(createNewsPanel(news));
+  });
+  console.log('All news Fetched');
+  console.log(all_news);
+}
+
+async function renderTodaysNews(){
+   
+  const container = document.getElementById('render-all-news');
+  container.innerHTML = '';
+  const condition = 'fetchTodaysNews';
+  var all_news = await fetchNewsByContion(condition);
+  all_news.forEach(news => {
+      container.appendChild(createNewsPanel(news));
+  });
+  console.log('All news Fetched');
+  console.log(all_news);
+}
+
+async function renderHotNews(){
+   
+  const container = document.getElementById('render-all-news');
+  container.innerHTML = '';
+  const condition = 'fetchHotNews';
+  var all_news = await fetchNewsByContion(condition);
+  all_news.forEach(news => {
+      container.appendChild(createNewsPanel(news));
+  });
+  console.log('All news Fetched');
+  console.log(all_news);
+}
+
 
 
 
@@ -220,6 +421,7 @@ function createNewsPanel(news) {
     // Create main panel div
     var panelDiv = document.createElement("div");
     panelDiv.className = "panel panel-default";
+    panelDiv.style.background = '#fff';
   
     // Create panel heading div
     var headingDiv = document.createElement("div");
@@ -265,6 +467,7 @@ function createNewsPanel(news) {
     button1.value = news._id;
     button1.style.zIndex = 1;
     button1.onclick = function edit(event){
+      //event.preventDefault();
         console.log('Edit is clicked', event.target.name, event.target.value);
         console.log(this.value);
         console.log(event.target.value)
@@ -333,15 +536,15 @@ function createNewsPanel(news) {
     // Create panel-collapse div
     var collapseDiv = document.createElement("div");
     collapseDiv.id = news._id;
-    collapseDiv.className = "panel-collapse collapse";
+    collapseDiv.className = " panel-collapse collapse";
   
-    // Create panel body div
-    var bodyDiv = document.createElement("div");
-    bodyDiv.className = "panel-body";
-    bodyDiv.textContent = "Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.";
+    // // Create panel body div
+    // var bodyDiv = document.createElement("div");
+    // bodyDiv.className = "panel-body";
+    // bodyDiv.textContent = "Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.";
   
     // Append body div to collapse div
-    collapseDiv.appendChild(bodyDiv);
+    collapseDiv.appendChild(createArticleComponent(news));
   
     // Append collapse div to main panel div
     panelDiv.appendChild(collapseDiv);
@@ -472,7 +675,7 @@ function showToast(message, duration) {
 //     subHeading: document.getElementById('subHeading').value,
 //     detailNews: document.getElementById('detailNews').value,
 //     author: document.getElementById('author').value,
-//     publicationDate: document.getElementById('publicationDate').value,
+//     publishedDate: document.getElementById('publishedDate').value,
 //     imageUrl: document.getElementById('imageUrl').value,
 //     videoUrl: document.getElementById('videoUrl').value,
 //     isHotNews: document.getElementById('isHotNews').checked
@@ -484,7 +687,7 @@ function showToast(message, duration) {
 //     "subHeading": "Vertical farming takes root with sustainable water-based systems",
 //     "detailNews": "The future of agriculture is taking root in urban vertical farms, where leafy greens and herbs flourish without a single grain of soil. Hydroponics, the science of growing plants in nutrient-rich water solutions, is revolutionizing farming by minimizing water usage, reducing environmental impact, and increasing yields. Imagine rows of vibrant lettuce stacked high in a city center, bathed in controlled LED lighting and meticulously fed through precisely monitored water systems. This innovative approach not only offers a viable solution for food security in densely populated areas but also significantly reduces the carbon footprint associated with traditional farming methods.",
 //     "author": "Dr. Sarah Jones",
-//     "publicationDate": "2023-12-26",
+//     "publishedDate": "2023-12-26",
 //     "imageUrl": "images/news1.jpg",
 //     "videoUrl": "https://youtu.be/AUnPAw-oQdQ?si=t0lUEm-PQumrGxl8",
 //     "isHotNews": true
@@ -494,7 +697,7 @@ function showToast(message, duration) {
 //     "subHeading": "Unmanned aerial vehicles monitor crops and optimize resource usage",
 //     "detailNews": "Imagine tiny, buzzing eyes scanning vast fields of golden wheat, meticulously collecting data on plant health, water distribution, and pest infestations. This futuristic vision is becoming a reality thanks to the integration of drones into modern agriculture. Equipped with high-resolution cameras and advanced sensors, these unmanned aerial vehicles provide farmers with real-time insights into their crops, allowing them to make precise decisions about irrigation, fertilization, and pest control. By pinpointing problem areas and applying resources only where needed, drones offer the potential to increase yields, reduce waste, and ultimately, create a more sustainable agricultural system.",
 //     "author": "Max Thompson",
-//     "publicationDate": "2023-12-25",
+//     "publishedDate": "2023-12-25",
 //     "imageUrl": "images/news2.jpeg",
 //     "videoUrl": "https://youtu.be/AUnPAw-oQdQ?si=t0lUEm-PQumrGxl8",
 //     "isHotNews": false
@@ -504,7 +707,7 @@ function showToast(message, duration) {
 //     "subHeading": "Gene editing technology promises healthier, more resilient plants",
 //     "detailNews": "The power of genetic engineering is being harnessed to create the next generation of superfoods. CRISPR, a revolutionary gene-editing tool, allows scientists to precisely modify plant DNA, potentially enhancing their nutritional content, resistance to disease, and tolerance to harsh environmental conditions. Imagine rice enriched with vitamin A, tomatoes with extended shelf life, or bananas naturally fortified with iron. These possibilities, once relegated to the realm of science fiction, are inching closer to reality thanks to CRISPR technology. While ethical considerations remain important, the potential benefits of CRISPR-edited crops for global food security and nutrition are undeniable.",
 //     "author": "Dr. Alexia Lee",
-//     "publicationDate": "2023-12-24",
+//     "publishedDate": "2023-12-24",
 //     "imageUrl": "images/news1.jpg",
 //     "videoUrl": "https://youtu.be/AUnPAw-oQdQ?si=t0lUEm-PQumrGxl8",
 //     "isHotNews": true
@@ -523,10 +726,7 @@ function showToast(message, duration) {
 async function insertNewsInDatabase(news){
 await fetch(serverUrl+"create", {
         method: "POST",
-        headers: {
-        "Content-Type": "application/json",
-        },
-        body: JSON.stringify(news),
+        body: news,
         })
         .then((response) => response.json())
         .then((data) => {
@@ -563,12 +763,11 @@ async function deleteNewsFromDatabase(id){
 }
 
 async function updateNewsInDatabase(news){
+  console.log('Updating news in database');
+  console.log({news});
     await fetch(serverUrl+"update", {
-    method: "POST",
-    headers: {
-    "Content-Type": "application/json",
-    },
-    body: JSON.stringify(news),
+      method: "POST",
+      body: news,
     })
     .then((response) => response.json())
     .then((data) => {
@@ -581,6 +780,23 @@ async function updateNewsInDatabase(news){
 
     }
 
+
+
+    // Your image string
+//var imageString = "data:image/png;base64,iVBORw0KG..."; // Replace this with your actual Base64-encoded image string
+
+function base64toBlob(base64String) {
+  var parts = base64String.split(';base64,');
+  var mimeType = parts[0].split(':')[1];
+  var data = atob(parts[1]);
+
+  var byteCharacters = new Array(data.length);
+  for (var i = 0; i < data.length; i++) {
+      byteCharacters[i] = data.charCodeAt(i);
+  }
+
+  return new Blob([new Uint8Array(byteCharacters)], { type: mimeType });
+}
 
 
  

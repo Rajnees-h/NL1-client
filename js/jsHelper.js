@@ -1,4 +1,4 @@
-export function getNavBar() {
+export async function getNavBar() {
 
     // Specify the URL of the HTML file you want to load
     const url = "./htmlPages/navBar.html";
@@ -15,7 +15,7 @@ export function getNavBar() {
       console.log('NavBar Called')
   }
 
-  export function getHeader(){
+  export async function getHeader(){
         // Specify the URL of the HTML file you want to load
         const url = "./htmlPages/header.html";
   
@@ -31,7 +31,7 @@ export function getNavBar() {
           console.log('Header Called')
   }
 
-export function getMainSection(){
+export async function getMainSection(){
     // Specify the URL of the HTML file you want to load
     const url = "./htmlPages/mainSection.html";
 
@@ -47,7 +47,7 @@ export function getMainSection(){
       console.log('MainSection Called')
 }
 
-export function getFooter(){
+export async function getFooter(){
     // Specify the URL of the HTML file you want to load
     const url = "./htmlPages/footer.html";
 
@@ -63,7 +63,7 @@ export function getFooter(){
       console.log('Footer Called')
 }
 
-export function getNewsSection() {
+export async function getNewsSection() {
 
     // Specify the URL of the HTML file you want to load
     const url = "./htmlPages/newsSection.html";

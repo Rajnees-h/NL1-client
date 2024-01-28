@@ -225,8 +225,8 @@
     <label for="author">Author:</label>
     <input type="text" id="author" name="author" required>
 
-    <label for="publicationDate">Publication Date:</label>
-    <input type="date" id="publicationDate" name="publicationDate" required>
+    <label for="publishedDate">Publication Date:</label>
+    <input type="date" id="publishedDate" name="publishedDate" required>
 
     <label for="imageUrl">Image URL:</label>
     <input type="text" id="imageUrl" name="imageUrl" required>

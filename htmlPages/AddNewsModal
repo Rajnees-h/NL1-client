@@ -79,7 +79,9 @@
 <body>
 
   <!-- Form Trigger Button -->
-  <button onclick="openModal()">Open Form</button>
+  
+  
+
 
   <!-- The Modal -->
   <div id="myModal" class="modal">
@@ -99,8 +101,8 @@
         <label for="author">Author:</label>
         <input type="text" id="author" name="author" required>
 
-        <label for="publicationDate">Publication Date:</label>
-        <input type="date" id="publicationDate" name="publicationDate" required>
+        <label for="publishedDate">Publication Date:</label>
+        <input type="date" id="publishedDate" name="publishedDate" required>
 
  <label for="imageUpload">Upload Image:</label>
 <input type="file" id="imageUpload" name="imageUpload" accept="image/*" required>

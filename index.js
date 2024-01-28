@@ -4,7 +4,7 @@ import { getNavBar,getHeader,getMainSection,getFooter } from "./js/jsHelper.js";
 
 // Server Url
 export const serverUrl = 'https://my-news-letter-h5vk.onrender.com/';
-//export const serverUrl = 'http://localhost:3001/';
+// export const serverUrl = 'http://localhost:3001/';
 
 // Console to print Script tag is working
 console.log('Inside Script Tag')
@@ -20,21 +20,26 @@ getMainSection();
 getFooter();
 
 
-
+console.log('hot news '+ document.getElementById('hotNewsButton'))
 
 // On Document Load rendering all News and Adding Button Listner
 document.addEventListener('DOMContentLoaded', async function () {
-  // rendering all news
-    await renderNewsForMainSection();
-  // adding button Listner for each News Card
-    addReadNewsButtonListener();
 
-    var hotNewsButton = document.getElementById('hotNewsButton');
-    var todaysNewsButton = document.getElementById('hotNewsButton');
-    
-    addNavBarButtonListeners();
+
+
+  // rendering all 
+    let condition = 'fetchPublishedNews';
+    await renderNewsForMainSection(condition);
+  // adding button Listner for each News Card
+
+
+   addNavBarButtonListeners();
+
+  console.log('onc document load completed')
+ 
 
 });
+
 
 function addNavBarButtonListeners(){
 
@@ -43,11 +48,13 @@ const todaysNewsButton = document.getElementById('todaysNewsButton');
 const about = document.getElementById('about');
 
 hotNewsButton.onclick = function hotNewsButtonClicked(){
-  
+  console.log('Read Hot News clickeed')
+  renderHotNews();
 }
 
 todaysNewsButton.onclick = function todaysNewsButtonClicked(){
-  alert('Today news is clicked')
+  console.log('Read Todays News clickeed')
+  renderTodaysNews();
 }
 
 about.onclick = function(){
@@ -61,37 +68,70 @@ about.onclick = function(){
   function addReadNewsButtonListener(){
     const readNewsButtons = document.getElementsByName('readCompleteNews');
     readNewsButtons.forEach(button=>{
-      button.addEventListener('click', function(event) {
-          var newsId = event.target.id;
-          var url = './readNews.html?id=' + newsId;
-          //window.location.href = url;
-          window.open(url, '_blank');
-          
-    
-    });
+      button.removeEventListener('click',myFunction);
+      button.addEventListener('click', myFunction );
   });
+}
+
+function myFunction(event) {
+  var newsId = event.target.id;
+  var url = './readNews.html?id=' + newsId;
+  //window.location.href = url;
+  window.open(url, '_blank');
+  
+
 }
 
   // Render all new (From database)
 
 async function renderAllNews(){
 
-      const all_news = await FetchAllNews();
+      const all_news = await renderNewsForMainSection();
       all_news.forEach(news => {
           document.getElementById('allNews').appendChild(createNewsCard(news));
       });
       
 }
 
+// Render Hot News
+async function renderHotNews(){
+
+  const condition = 'fetchHotNews';
+  renderNewsForMainSection(condition);
+
+  // const all_news = await FetchAllNews();
+  // all_news.forEach(news => {
+  //     document.getElementById('allNews').appendChild(createNewsCard(news));
+  // });
+  
+}
+
+// Render Today's News
+async function renderTodaysNews(){
+
+  const condition = 'fetchTodaysNews';
+  renderNewsForMainSection(condition);
+  
+  
+}
+
 // Render News For MainSection
-async function renderNewsForMainSection(){
+async function renderNewsForMainSection(condition){
+  // Empty the render all div section first 
+  let allNewsDiv = document.getElementById('allNews');
+  if(allNewsDiv != null)
+    allNewsDiv.innerHTML = '';
 
-  let condition = 'fetchAll';
+    console.log('All News div ' + allNewsDiv)
 
-  const all_news = await fetchNewsByContion(condition);
+    
+    const all_news = await fetchNewsByContion(condition)
+  // Adding News pannel for each news
   all_news.forEach(news => {
-      document.getElementById('allNews').appendChild(createNewsCard(news));
+    document.getElementById('allNews').appendChild(createNewsCard(news));
   });
+
+  addReadNewsButtonListener();
   
 }
 
@@ -155,8 +195,10 @@ function createNewsCard(news){
   
   // Create the image element with the given source and class "img-fluid"
   const imgElement = document.createElement('img');
-  imgElement.src = news.imageURL;
+  imgElement.src = news.imageUrl || './images/No_Image_Available.jpg';
   imgElement.className = 'img-fluid';
+
+  console.log('Printing Image url from createNewsCard function -  ', news.imageUrl)
   
   // Create the anchor element with href "#"
   const anchorElement = document.createElement('a');
@@ -398,7 +440,7 @@ function shortenParagraph(paragraph, maxLength) {
 //     "subHeading": "Vertical farming takes root with sustainable water-based systems",
 //     "detailNews": "The future of agriculture is taking root in urban vertical farms, where leafy greens and herbs flourish without a single grain of soil. Hydroponics, the science of growing plants in nutrient-rich water solutions, is revolutionizing farming by minimizing water usage, reducing environmental impact, and increasing yields. Imagine rows of vibrant lettuce stacked high in a city center, bathed in controlled LED lighting and meticulously fed through precisely monitored water systems. This innovative approach not only offers a viable solution for food security in densely populated areas but also significantly reduces the carbon footprint associated with traditional farming methods.",
 //     "author": "Dr. Sarah Jones",
-//     "publicationDate": "2023-12-26",
+//     "publishedDate": "2023-12-26",
 //     "imageUrl": "https://images.unsplash.com/photo-1555377522-07300fa13906?ixlib=rb-1.2.1&ixid=MnwxMjIhaT1uMHwxLW4xOTAlKV5BZ2hwYjBzcm9v&auto=format&fit=crop&w=750&q=80",
 //     "videoUrl": "https://www.youtube.com/watch?v=nW947Z-J1_U",
 //     "isHotNews": true
@@ -408,7 +450,7 @@ function shortenParagraph(paragraph, maxLength) {
 //     "subHeading": "Unmanned aerial vehicles monitor crops and optimize resource usage",
 //     "detailNews": "Imagine tiny, buzzing eyes scanning vast fields of golden wheat, meticulously collecting data on plant health, water distribution, and pest infestations. This futuristic vision is becoming a reality thanks to the integration of drones into modern agriculture. Equipped with high-resolution cameras and advanced sensors, these unmanned aerial vehicles provide farmers with real-time insights into their crops, allowing them to make precise decisions about irrigation, fertilization, and pest control. By pinpointing problem areas and applying resources only where needed, drones offer the potential to increase yields, reduce waste, and ultimately, create a more sustainable agricultural system.",
 //     "author": "Max Thompson",
-//     "publicationDate": "2023-12-25",
+//     "publishedDate": "2023-12-25",
 //     "imageUrl": "https://images.unsplash.com/photo-1529958587287-fa9530c7937d?ixlib=rb-1.2.1&ixid=MnwxMjIhaT1uMHwxLW4xOTAlKV5BZ2hwYjBzcm9v&auto=format&fit=crop&w=750&q=80",
 //     "videoUrl": "https://www.youtube.com/watch?v=4-fXg67u02M",
 //     "isHotNews": false
@@ -418,7 +460,7 @@ function shortenParagraph(paragraph, maxLength) {
 //     "subHeading": "Gene editing technology promises healthier, more resilient plants",
 //     "detailNews": "The power of genetic engineering is being harnessed to create the next generation of superfoods. CRISPR, a revolutionary gene-editing tool, allows scientists to precisely modify plant DNA, potentially enhancing their nutritional content, resistance to disease, and tolerance to harsh environmental conditions. Imagine rice enriched with vitamin A, tomatoes with extended shelf life, or bananas naturally fortified with iron. These possibilities, once relegated to the realm of science fiction, are inching closer to reality thanks to CRISPR technology. While ethical considerations remain important, the potential benefits of CRISPR-edited crops for global food security and nutrition are undeniable.",
 //     "author": "Dr. Alexia Lee",
-//     "publicationDate": "2023-12-24",
+//     "publishedDate": "2023-12-24",
 //     "imageUrl": "https://images.unsplash.com/photo-1568161546452-53101b7638db?ixlib=rb-1.2.1&ixid=MnwxMjIhaT1uMHwxLW4xOTAlKV5BZ2hwYjBzcm9v&auto=format&fit=crop&w=750&q=80",
 //     "videoUrl": "https://www.youtube.com/watch?v=y4e_kD6_e54",
 //     "isHotNews": true
@@ -433,7 +475,7 @@ function shortenParagraph(paragraph, maxLength) {
 //       "subHeading": "Innovations that are set to change the landscape",
 //       "detailNews": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed et justo ac quam fermentum cursus. Vestibulum ultricies nunc sit amet venenatis varius. In hac habitasse platea dictumst. Quisque quis ullamcorper quam. Nulla facilisi. Aenean nec mi at ex egestas tincidunt.",
 //       "author": "John Doe",
-//       "publicationDate": "2023-12-25",
+//       "publishedDate": "2023-12-25",
 //       "imageUrl": "https://example.com/news-image.jpg",
 //       "videoUrl": "https://example.com/news-video.mp4",
 //       "isHotNews": true
@@ -443,7 +485,7 @@ function shortenParagraph(paragraph, maxLength) {
 //       "subHeading": "Exploring the universe and uncovering its secrets",
 //       "detailNews": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla facilisi. Curabitur in bibendum libero. Suspendisse potenti. Aliquam erat volutpat. Proin consectetur scelerisque orci, vitae cursus eros dapibus ut. Fusce eu diam a ex hendrerit euismod nec vel ex.",
 //       "author": "Jane Smith",
-//       "publicationDate": "2023-12-26",
+//       "publishedDate": "2023-12-26",
 //       "imageUrl": "https://example.com/space-image.jpg",
 //       "videoUrl": "https://example.com/space-video.mp4",
 //       "isHotNews": false
@@ -453,7 +495,7 @@ function shortenParagraph(paragraph, maxLength) {
 //       "subHeading": "Global initiatives to protect our planet",
 //       "detailNews": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Etiam laoreet turpis eu ligula eleifend, at eleifend felis fermentum. Nunc fermentum urna a quam facilisis, vel facilisis odio vestibulum. Integer vel dolor ut justo fermentum vulputate id ut elit.",
 //       "author": "David Brown",
-//       "publicationDate": "2023-12-27",
+//       "publishedDate": "2023-12-27",
 //       "imageUrl": "https://example.com/environment-image.jpg",
 //       "videoUrl": "https://example.com/environment-video.mp4",
 //       "isHotNews": true
@@ -463,7 +505,7 @@ function shortenParagraph(paragraph, maxLength) {
 //       "subHeading": "Blockbuster hits and unprecedented success",
 //       "detailNews": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. In hac habitasse platea dictumst. Duis vulputate, metus eu luctus cursus, dolor justo bibendum arcu, et dapibus libero elit ut elit. Quisque euismod ex eu hendrerit efficitur. Sed vehicula, turpis.",
 //       "author": "Emily Johnson",
-//       "publicationDate": "2023-12-28",
+//       "publishedDate": "2023-12-28",
 //       "imageUrl": "https://example.com/entertainment-image.jpg",
 //       "videoUrl": "https://example.com/entertainment-video.mp4",
 //       "isHotNews": false
@@ -473,7 +515,7 @@ function shortenParagraph(paragraph, maxLength) {
 //       "subHeading": "How AI is transforming industries and daily life",
 //       "detailNews": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed fermentum, ligula eget tincidunt bibendum, augue eros feugiat ligula, eu blandit eros sem vel libero. Ut luctus, nunc vitae malesuada consectetur, purus tellus posuere urna, vel luctus ligula purus eget justo.",
 //       "author": "Michael Anderson",
-//       "publicationDate": "2023-12-29",
+//       "publishedDate": "2023-12-29",
 //       "imageUrl": "https://example.com/ai-image.jpg",
 //       "videoUrl": "https://example.com/ai-video.mp4",
 //       "isHotNews": true
@@ -493,7 +535,7 @@ function shortenParagraph(paragraph, maxLength) {
 //       "subHeading": "Initiatives to improve access to quality education worldwide",
 //       "detailNews": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer ut urna ut odio laoreet egestas. Aliquam tincidunt arcu id justo varius, id volutpat lectus varius. Nunc eu mi a mi fringilla egestas. Duis eu turpis nec velit.",
 //       "author": "David Smith",
-//       "publicationDate": "2023-12-31",
+//       "publishedDate": "2023-12-31",
 //       "imageUrl": "https://example.com/education-image.jpg",
 //       "videoUrl": "https://example.com/education-video.mp4",
 //       "isHotNews": true
@@ -503,7 +545,7 @@ function shortenParagraph(paragraph, maxLength) {
 //       "subHeading": "Celebrating victories and memorable achievements",
 //       "detailNews": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Proin hendrerit, justo id iaculis commodo, erat arcu auctor nisi, nec tincidunt turpis mauris quis lacus. In et erat vitae eros posuere scelerisque. Sed vel libero sit amet elit.",
 //       "author": "Alex Rodriguez",
-//       "publicationDate": "2024-01-01",
+//       "publishedDate": "2024-01-01",
 //       "imageUrl": "https://example.com/sports-image.jpg",
 //       "videoUrl": "https://example.com/sports-video.mp4",
 //       "isHotNews": false
@@ -513,7 +555,7 @@ function shortenParagraph(paragraph, maxLength) {
 //       "subHeading": "Technological advancements for eco-friendly farming",
 //       "detailNews": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Duis eu sem et ligula euismod consectetur. Aenean eu nunc fringilla, finibus dui ac, feugiat odio. Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas.",
 //       "author": "Emma Green",
-//       "publicationDate": "2024-01-02",
+//       "publishedDate": "2024-01-02",
 //       "imageUrl": "https://example.com/agriculture-image.jpg",
 //       "videoUrl": "https://example.com/agriculture-video.mp4",
 //       "isHotNews": true

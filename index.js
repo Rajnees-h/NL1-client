@@ -3,8 +3,8 @@ import { getNavBar,getHeader,getMainSection,getFooter } from "./js/jsHelper.js";
 
 
 // Server Url
-export const serverUrl = 'https://my-news-letter-h5vk.onrender.com/';
-//export const serverUrl = 'http://localhost:3001/';
+//export const serverUrl = 'https://my-news-letter-h5vk.onrender.com/';
+export const serverUrl = 'http://localhost:3001/';
 
 // Console to print Script tag is working
 console.log('Inside Script Tag')
